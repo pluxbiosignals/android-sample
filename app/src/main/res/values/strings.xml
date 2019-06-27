@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PLUX Sample</string>
+    <string name="scan_activity_title">Scan</string>
+</resources>

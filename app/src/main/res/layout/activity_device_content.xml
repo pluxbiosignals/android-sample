@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" android:background="@android:color/background_light"
+        android:orientation="vertical">
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="30dp">
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Name:"
+                android:id="@+id/textView" android:layout_weight="1" android:textSize="16dp"
+                android:gravity="center_vertical" android:paddingLeft="10dp" android:textColor="@android:color/black"
+                android:textStyle="bold"/>
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="name"
+                android:id="@+id/device_name_text_view" android:layout_weight="1" android:textSize="16dp"
+                android:gravity="center_vertical" android:paddingLeft="10dp"
+                android:textColor="@color/material_grey_600" android:textStyle="italic"/>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="30dp">
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="MAC address:"
+                  android:id="@+id/textView2" android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp" android:textColor="@android:color/black"
+                  android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="00:00:00:00:00:00"
+                  android:id="@+id/mac_address_text_view" android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp"
+                  android:textColor="@color/material_grey_600" android:textStyle="italic"/>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="30dp">
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="Elapsed time:"
+                  android:id="@+id/textView6" android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp" android:textColor="@android:color/black"
+                  android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="00:00:00"
+                  android:id="@+id/elapsed_time_Text_view" android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp"
+                  android:textColor="@color/material_grey_600" android:textStyle="italic"/>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="30dp">
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="State:"
+                  android:id="@+id/textView4" android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp" android:textColor="@android:color/black"
+                  android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent"
+                  android:text="state" android:id="@+id/state_text_view" android:layout_weight="1"
+                  android:textSize="16dp" android:gravity="center_vertical" android:paddingLeft="10dp"
+                  android:textColor="@color/material_grey_600" android:textStyle="italic"/>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2dp" android:layout_marginTop="2dp" android:layout_marginBottom="2dp"
+            android:background="@android:color/holo_blue_dark">
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Connect"
+                    android:id="@+id/connect_button" android:layout_weight="1"/>
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Disconnect"
+                    android:id="@+id/disconnect_button" android:layout_weight="1"/>
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+                      android:layout_height="wrap_content">
+            <Button android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Start"
+                    android:id="@+id/start_button" android:layout_weight="1"/>
+            <Button android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Stop"
+                    android:id="@+id/stop_button" android:layout_weight="1"/>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/bitalino_linear_layout" android:visibility="gone">
+        <Button android:layout_width="match_parent" android:layout_height="wrap_content" android:text="State"
+                android:id="@+id/state_button"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <RadioButton
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:id="@+id/digital_1_radio_button" android:textColor="@color/material_grey_600" android:textSize="20dp"
+                    android:textStyle="bold" android:layout_weight="1" android:gravity="center"
+                    android:layout_margin="2dp" android:background="@drawable/radio_button_background"
+            />
+            <RadioButton android:layout_width="match_parent" android:layout_height="wrap_content" android:text="2"
+                         android:id="@+id/digital_2_radio_button" android:textColor="@color/material_grey_600"
+                         android:textSize="20dp" android:textStyle="bold" android:layout_weight="1"
+                         android:gravity="center" android:layout_margin="2dp"
+                         android:background="@drawable/radio_button_background"/>
+            <RadioButton android:layout_width="match_parent" android:layout_height="wrap_content" android:text="3"
+                         android:id="@+id/digital_3_radio_button" android:textColor="@color/material_grey_600"
+                         android:textSize="20dp" android:textStyle="bold" android:layout_weight="1"
+                         android:gravity="center" android:layout_margin="2dp"
+                         android:background="@drawable/radio_button_background" android:visibility="gone"/>
+            <RadioButton android:layout_width="match_parent" android:layout_height="wrap_content" android:text="4"
+                         android:id="@+id/digital_4_radio_button" android:textColor="@color/material_grey_600"
+                         android:textSize="20dp" android:textStyle="bold" android:layout_weight="1"
+                         android:gravity="center" android:layout_margin="2dp"
+                         android:background="@drawable/radio_button_background" android:visibility="gone"/>
+        </LinearLayout>
+        <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Trigger"
+                android:id="@+id/trigger_button"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <SeekBar
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/battery_threshold_seek_bar" android:layout_weight="1" android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp" android:layout_gravity="center" android:max="62"
+                    android:progress="20"/>
+            <Button
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:text="Battery Threshold"
+                    android:id="@+id/battery_threshold_button"/>
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+                      android:layout_height="match_parent">
+            <SeekBar android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/pwm_seek_bar"
+                     android:layout_weight="1" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"
+                     android:layout_gravity="center" android:progress="100" android:max="254"/>
+            <Button android:layout_width="110dp" android:layout_height="wrap_content" android:text="PWM"
+                    android:id="@+id/pwm_button"/>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="Results:"
+                  android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp" android:textColor="@android:color/black"
+                  android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="..."
+                  android:id="@+id/results_text_view" android:layout_weight="1" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp"
+                  android:textColor="@color/material_grey_600" android:textStyle="italic"/>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:id="@+id/bioplux_linear_layout">
+
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                >
+
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Version"
+                    android:id="@+id/version_button"
+                    android:layout_weight="1"/>
+
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Description"
+                    android:id="@+id/description_button"
+                    android:layout_weight="1"/>
+        </LinearLayout>
+
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+                      android:layout_height="wrap_content">
+
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Battery"
+                    android:id="@+id/battery_button"
+                    android:layout_weight="1"/>
+
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Test"
+                    android:id="@+id/button"
+                    android:layout_weight="1"
+                    android:visibility="invisible"/>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Results:"
+                  android:textSize="16dp" android:gravity="center_vertical"
+                  android:paddingLeft="10dp" android:textColor="@android:color/black" android:textStyle="bold"
+                  android:id="@+id/textView5"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="..."
+                  android:id="@+id/bioplux_results_text_view" android:textSize="16dp"
+                  android:gravity="center_vertical" android:paddingLeft="10dp"
+                  android:textColor="@color/material_grey_600" android:textStyle="italic"/>
+    </LinearLayout>
+</LinearLayout>
