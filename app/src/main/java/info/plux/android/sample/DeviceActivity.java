@@ -50,8 +50,9 @@ import static info.plux.pluxapi.bioplux.Event.ON_BODY_EVENT;
 public class DeviceActivity extends AppCompatActivity implements OnBiopluxDataAvailable, OnBiopluxError, OnBITalinoDataAvailable, View.OnClickListener {
     private final String TAG = this.getClass().getSimpleName();
 
-    public final static String EXTRA_DEVICE = "info.plux.pluxandroid.DeviceActivity.EXTRA_DEVICE";
-    public final static String FRAME = "info.plux.pluxandroid.DeviceActivity.Frame";
+    public final static String EXTRA_DEVICE          = "info.plux.android.sample.DeviceActivity.EXTRA_DEVICE";
+    public final static String FRAME                 = "info.plux.android.sample.DeviceActivity.FRAME";
+    public final static String ELAPSED_TIME_EVENT    = "info.plux.android.sample.DeviceActivity.ELAPSED_TIME_EVENT";
 
     private int samplingRate = 1000;
 
@@ -127,13 +128,25 @@ public class DeviceActivity extends AppCompatActivity implements OnBiopluxDataAv
         handler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                Bundle bundle = msg.getData();
-                Parcelable frame = bundle.getParcelable(FRAME);
+                final Bundle bundle = msg.getData();
 
-                if (frame.getClass().equals(BiopluxFrame.class)) { //biosignalsplux
-                    biopluxResultsTextView.setText(frame.toString());
-                } else if (frame.getClass().equals(BITalinoFrame.class)) { //BITalino
-                    resultsTextView.setText(frame.toString());
+                if(bundle.containsKey(FRAME)){
+                    final Parcelable frame = bundle.getParcelable(FRAME);
+
+                    if (frame.getClass().equals(BiopluxFrame.class)) { //biosignalsplux
+                        biopluxResultsTextView.setText(frame.toString());
+                    } else if (frame.getClass().equals(BITalinoFrame.class)) { //BITalino
+                        resultsTextView.setText(frame.toString());
+                    }
+                }
+                else if(bundle.containsKey(ELAPSED_TIME_EVENT)){
+                    final long elapsedTime = bundle.getLong(ELAPSED_TIME_EVENT);
+
+                    if(elapsedTextView == null){
+                        return;
+                    }
+
+                    elapsedTextView.setText(getTimeString(elapsedTime));
                 }
             }
         };
@@ -630,7 +643,12 @@ public class DeviceActivity extends AppCompatActivity implements OnBiopluxDataAv
             @Override
             public void run() {
                 elapsedTime += TIME_1_SECOND;
-                elapsedTextView.setText(getTimeString(elapsedTime));
+
+                Message message = handler.obtainMessage();
+                Bundle bundle = new Bundle();
+                bundle.putLong(ELAPSED_TIME_EVENT, elapsedTime);
+                message.setData(bundle);
+                handler.sendMessage(message);
             }
 
         }, 0, TIME_1_SECOND);
