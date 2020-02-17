@@ -23,8 +23,8 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import info.plux.pluxapi.BTHDeviceScan;
-import info.plux.pluxapi.Constants;
+import info.plux.api.DeviceScan;
+import info.plux.api.interfaces.Constants;
 
 import java.util.ArrayList;
 
@@ -35,7 +35,7 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
     private boolean scanning;
     private Handler handler = new Handler();
 
-    private BTHDeviceScan deviceScan;
+    private DeviceScan deviceScan;
     private boolean isScanDevicesUpdateReceiverRegistered = false;
 
     // Stops scanning after 10 seconds.
@@ -55,7 +55,7 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
         getSupportActionBar().setTitle(R.string.scan_activity_title);
         getSupportActionBar().setDisplayShowTitleEnabled(true);
 
-        deviceScan = new BTHDeviceScan(this);
+        deviceScan = new DeviceScan(this);
 
         initView();
     }
