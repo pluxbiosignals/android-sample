@@ -65,7 +65,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
     private int samplingRate = 1000;
     //Sources
-    private boolean settingParameter = true;//fNIRS sensor
+    private boolean settingParameter = false;//fNIRS sensor
     private List<Source> sources = new ArrayList<>();
 
     private BluetoothDevice bluetoothDevice;
@@ -248,7 +248,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         stateTextView.setText(currentState.name());
 
         if (bluetoothDevice.getName() != null) {
-            isBioplux = (bluetoothDevice.getName().toLowerCase().contains("bitalino")) ? false : true;
+            isBioplux = !bluetoothDevice.getName().toLowerCase().contains("bitalino");
         } else {
             isBioplux = false;
         }
@@ -260,7 +260,8 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
         if (isBioplux) {
             try {
-                bioplux = new BiopluxCommunicationFactory().getCommunication(communication, this, this, this);
+                bioplux = new BiopluxCommunicationFactory().getCommunication(communication,
+                        this, this, this);
                 bioplux.setConnectionControllerEnabled(false);
                 bioplux.setDataStreamControllerEnabled(false);
                 //uncomment to receive the data as an array instead of a object [only available for BTH]
@@ -271,7 +272,8 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
         } else {
             try {
-                bitalino = new BITalinoCommunicationFactory().getCommunication(communication, this, this);
+                bitalino = new BITalinoCommunicationFactory().getCommunication(communication,
+                        this, this);
                 bitalino.setConnectionControllerEnabled(false);
                 bitalino.setDataStreamControllerEnabled(true);
             } catch (PLUXException e) {
@@ -350,7 +352,8 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
                         if (eventData.getEventDescription().equals(Constants.BATTERY_EVENT)) {
 
                         } else if (eventData.getEventDescription().equals(DISCONNECT_EVENT)) {
-                            final DisconnectEventType disconnectEventType = (DisconnectEventType) intent.getSerializableExtra(EXTRA_EVENT_DATA);
+                            final DisconnectEventType disconnectEventType = (DisconnectEventType)
+                                    intent.getSerializableExtra(EXTRA_EVENT_DATA);
 
                             Log.d(TAG, "Disconnect event: " + disconnectEventType.name());
                         }
@@ -373,7 +376,8 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
                         resultsTextView.setText(parcelable.toString());
                     } else if (parcelable instanceof BITalinoDescription) { //BITalino
                         isBITalino2 = ((BITalinoDescription) parcelable).isBITalino2();
-                        resultsTextView.setText(String.format("isBITalino2: %b; FwVersion: %.1f", isBITalino2, ((BITalinoDescription) parcelable).getFwVersion()));
+                        resultsTextView.setText(String.format("isBITalino2: %b; FwVersion: %.1f",
+                                isBITalino2, ((BITalinoDescription) parcelable).getFwVersion()));
                     }
                 }
             } else if (ACTION_EVENT_AVAILABLE.equals(action)) {
@@ -469,96 +473,29 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.connect_button:
-                if (isBioplux) {
-                    try {
-                        bioplux.connect(bluetoothDevice.getAddress());
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        bitalino.connect(bluetoothDevice.getAddress());
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                }
+                connectDevice();
                 break;
+
             case R.id.disconnect_button:
-                stopTimer();
-
-                if (isBioplux) {
-                    try {
-                        bioplux.disconnect();
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        bitalino.disconnect();
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                }
+                disconnectDevice();
                 break;
+
             case R.id.start_button:
-                startTimer();
-
-                if (isBioplux) {
-                    startBioplux();
-
-                } else {
-                    try {
-                        bitalino.start(samplingRate, new int[]{0, 1, 2, 3, 4, 5});
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                }
+                startAcquisition();
                 break;
+
             case R.id.stop_button:
-                stopTimer();
-
-                if (isBioplux) {
-                    try {
-                        bioplux.stop();
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        bitalino.stop();
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                }
+                stopAcquisition();
                 break;
+
             case R.id.state_button:
-                if (!isBioplux) {
-                    try {
-                        bitalino.state();
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                }
+                checkState();
                 break;
+
             case R.id.trigger_button:
-                if (!isBioplux) {
-                    int[] digitalChannels = new int[isBITalino2 ? 2 : 4];
-
-                    digitalChannels[0] = (digital1RadioButton.isChecked()) ? 1 : 0;
-                    digitalChannels[1] = (digital2RadioButton.isChecked()) ? 1 : 0;
-
-                    if (!isBITalino2) {
-                        digitalChannels[2] = (digital3RadioButton.isChecked()) ? 1 : 0;
-                        digitalChannels[3] = (digital4RadioButton.isChecked()) ? 1 : 0;
-                    }
-
-                    try {
-                        bitalino.trigger(digitalChannels);
-                    } catch (PLUXException e) {
-                        e.printStackTrace();
-                    }
-                }
+                triggerDevice();
                 break;
+
             case R.id.digital_1_radio_button:
                 if (isDigital1RadioButtonChecked) {
                     digital1RadioButton.setChecked(false);
@@ -627,6 +564,105 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         }
     }
 
+    private void triggerDevice() {
+        if (!isBioplux) {
+            int[] digitalChannels = new int[isBITalino2 ? 2 : 4];
+
+            digitalChannels[0] = (digital1RadioButton.isChecked()) ? 1 : 0;
+            digitalChannels[1] = (digital2RadioButton.isChecked()) ? 1 : 0;
+
+            if (!isBITalino2) {
+                digitalChannels[2] = (digital3RadioButton.isChecked()) ? 1 : 0;
+                digitalChannels[3] = (digital4RadioButton.isChecked()) ? 1 : 0;
+            }
+
+            try {
+                bitalino.trigger(digitalChannels);
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void checkState() {
+        if (!isBioplux) {
+            try {
+                bitalino.state();
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void stopAcquisition() {
+        stopTimer();
+
+        if (isBioplux) {
+            sources.clear();
+            try {
+                bioplux.stop();
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                bitalino.stop();
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void startAcquisition() {
+        startTimer();
+
+        if (isBioplux) {
+            startBioplux();
+
+        } else {
+            try {
+                bitalino.start(samplingRate, new int[]{0, 1, 2, 3, 4, 5});
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void connectDevice() {
+        if (isBioplux) {
+            try {
+                bioplux.connect(bluetoothDevice.getAddress());
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                bitalino.connect(bluetoothDevice.getAddress());
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void disconnectDevice() {
+        stopTimer();
+
+        if (isBioplux) {
+            try {
+                bioplux.disconnect();
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                bitalino.disconnect();
+            } catch (PLUXException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
     private void startBioplux() {
         /*
          *------------------------------SOURCES CONFIGURATION---------------------------------------
@@ -665,9 +701,9 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
          * ---------------------------------------------------------------------------------------*/
 
         //add the necessary sources following the instructions above
-        sources.add(new Source(9, 16, (byte) 0x03, 1));
+        sources.add(new Source(1, 16, (byte) 0x01, 1));
 
-        //Comment this try-catch block for fNIRS
+        //Comment this try-catch block for fNIRS and set the flag settingParameter to true
         try {
             bioplux.start(samplingRate, sources);
         } catch (PLUXException e) {
