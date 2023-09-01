@@ -10,38 +10,38 @@
 package info.plux.android.sample;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import info.plux.api.DeviceScan;
-import info.plux.api.interfaces.Constants;
 
 import java.util.ArrayList;
+
+import info.plux.api.DeviceScan;
 
 public class ScanActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
     private final String TAG = this.getClass().getSimpleName();
 
     private DeviceListAdapter deviceListAdapter;
     private boolean scanning;
-    private Handler handler = new Handler();
+    private final Handler handler = new Handler();
 
     private DeviceScan deviceScan;
-    private boolean isScanDevicesUpdateReceiverRegistered = false;
 
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
-
-    private ListView devicesListView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -52,10 +52,20 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.scan_activity_title);
-        getSupportActionBar().setDisplayShowTitleEnabled(true);
 
-        deviceScan = new DeviceScan(this);
+        ActionBar actionBar = getSupportActionBar();
+
+        if (actionBar != null) {
+            actionBar.setTitle(R.string.scan_activity_title);
+            actionBar.setDisplayShowTitleEnabled(true);
+        }
+
+        deviceScan = new DeviceScan(this, bluetoothDevice -> {
+            if (bluetoothDevice != null) {
+                deviceListAdapter.addDevice(bluetoothDevice);
+                deviceListAdapter.notifyDataSetChanged();
+            }
+        });
 
         initView();
     }
@@ -77,24 +87,15 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_scan:
-                deviceListAdapter.clear();
-                scanDevice(true);
-                break;
-            case R.id.menu_stop:
-                scanDevice(false);
-                break;
+        if (item.getItemId() == R.id.menu_scan) {
+            deviceListAdapter.clear();
+            scanDevice(true);
+
+        } else if (item.getItemId() == R.id.menu_stop) {
+            scanDevice(false);
         }
+
         return true;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        registerReceiver(scanDevicesUpdateReceiver, new IntentFilter(Constants.ACTION_MESSAGE_SCAN));
-        isScanDevicesUpdateReceiverRegistered = true;
     }
 
     @Override
@@ -109,13 +110,8 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onDestroy() {
         super.onDestroy();
 
-        if(deviceScan != null){
+        if (deviceScan != null) {
             deviceScan.closeScanReceiver();
-        }
-
-        if(isScanDevicesUpdateReceiverRegistered){
-            unregisterReceiver(scanDevicesUpdateReceiver);
-            isScanDevicesUpdateReceiverRegistered = false;
         }
     }
 
@@ -135,8 +131,8 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
     /*
      * UI elements
      */
-    private void initView(){
-        devicesListView = findViewById(R.id.list_view);
+    private void initView() {
+        ListView devicesListView = findViewById(R.id.list_view);
         devicesListView.setOnItemClickListener(this);
 
         // Initializes list view adapter.
@@ -148,13 +144,10 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
     private void scanDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scanning = false;
-                    deviceScan.stopScan();
-                    invalidateOptionsMenu();
-                }
+            handler.postDelayed(() -> {
+                scanning = false;
+                deviceScan.stopScan();
+                invalidateOptionsMenu();
             }, SCAN_PERIOD);
 
             scanning = true;
@@ -166,26 +159,10 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
         invalidateOptionsMenu();
     }
 
-    private final BroadcastReceiver scanDevicesUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if(action.equals(Constants.ACTION_MESSAGE_SCAN)){
-                BluetoothDevice bluetoothDevice = intent.getParcelableExtra(Constants.EXTRA_DEVICE_SCAN);
-
-                if(bluetoothDevice != null){
-                    deviceListAdapter.addDevice(bluetoothDevice);
-                    deviceListAdapter.notifyDataSetChanged();
-                }
-            }
-        }
-    };
-
     // Adapter for holding devices found through scanning.
     private class DeviceListAdapter extends BaseAdapter {
-        private ArrayList<BluetoothDevice> devices;
-        private LayoutInflater inflater;
+        private final ArrayList<BluetoothDevice> devices;
+        private final LayoutInflater inflater;
 
         public DeviceListAdapter() {
             super();
@@ -194,7 +171,7 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
         }
 
         public void addDevice(BluetoothDevice device) {
-            if(!devices.contains(device)) {
+            if (!devices.contains(device)) {
                 devices.add(device);
             }
         }
@@ -240,8 +217,7 @@ public class ScanActivity extends AppCompatActivity implements AdapterView.OnIte
             final String deviceName = device.getName();
             if (deviceName != null && deviceName.length() > 0) {
                 viewHolder.deviceName.setText(deviceName);
-            }
-            else {
+            } else {
                 viewHolder.deviceName.setText("unknown device");
             }
             viewHolder.deviceAddress.setText(device.getAddress());
