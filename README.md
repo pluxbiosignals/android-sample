@@ -7,7 +7,7 @@ Working example of PLUX's Android API.
 
 ## Prerequisites ##
 - Android Studio or IntelliJ IDEA
-- Android SDK (build-tools 28.0.0 and SDK 28)
+- Android SDK (build-tools 28.0.0 and SDK 33)
 
 ## Supported Devices ##
 - [biosignalsplux](https://support.pluxbiosignals.com/knowledge-base/getting-started-biosignalsplux/)

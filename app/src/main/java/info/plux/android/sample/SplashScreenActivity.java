@@ -55,13 +55,7 @@ public class SplashScreenActivity extends Activity {
             return;
         }
 
-        new Handler().postDelayed(() -> {
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-                askPermissions();
-            } else {
-                testBluetooth();
-            }
-        }, 2 * 1000); //wait for 5 seconds
+        new Handler().postDelayed(this::askPermissions, 2 * 1000); //wait for 5 seconds
     }
 
     private void startScanActivity() {
@@ -131,14 +125,31 @@ public class SplashScreenActivity extends Activity {
         List<String> permissionsNeeded = new ArrayList<String>();
 
         final List<String> permissionsList = new ArrayList<String>();
-        if (!addPermission(permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-            permissionsNeeded.add("Bluetooth Scan");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (!addPermission(permissionsList, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                permissionsNeeded.add("Bluetooth Scan");
+            }
         }
-        if (!addPermission(permissionsList, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            permissionsNeeded.add("Read");
-        }
-        if (!addPermission(permissionsList, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            permissionsNeeded.add("Write in Storage");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!addPermission(permissionsList, Manifest.permission.BLUETOOTH_SCAN)) {
+                permissionsNeeded.add("Bluetooth Scan");
+            }
+            if (!addPermission(permissionsList, Manifest.permission.BLUETOOTH_CONNECT)) {
+                permissionsNeeded.add("Bluetooth Connect");
+            }
+
+        } else {
+            if (!addPermission(permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                permissionsNeeded.add("Bluetooth Scan");
+            }
+            if (!addPermission(permissionsList, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                permissionsNeeded.add("Read");
+            }
+            if (!addPermission(permissionsList, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                permissionsNeeded.add("Write in Storage");
+            }
+
         }
 
         if (!permissionsList.isEmpty()) {
