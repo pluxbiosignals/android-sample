@@ -35,13 +35,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,9 +47,11 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.SeekBar;
 import android.widget.TextView;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,11 +59,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import info.plux.api.DeviceCommunicationFactory;
 import info.plux.api.DeviceProperties;
 import info.plux.api.PLUXDevice;
 import info.plux.api.PLUXException;
 import info.plux.api.bioplux.BiopluxCommunication;
-import info.plux.api.bioplux.BiopluxCommunicationFactory;
 import info.plux.api.bioplux.OnBiopluxError;
 import info.plux.api.bioplux.enums.CommandError;
 import info.plux.api.bioplux.enums.DisconnectEventType;
@@ -74,11 +74,6 @@ import info.plux.api.bioplux.objects.DigitalInputChange;
 import info.plux.api.bioplux.objects.EventData;
 import info.plux.api.bioplux.objects.Source;
 import info.plux.api.bioplux.objects.parameters.SetParameter;
-import info.plux.api.bitalino.BITalinoCommunication;
-import info.plux.api.bitalino.BITalinoCommunicationFactory;
-import info.plux.api.bitalino.BITalinoDescription;
-import info.plux.api.bitalino.BITalinoFrame;
-import info.plux.api.bitalino.BITalinoState;
 import info.plux.api.enums.States;
 import info.plux.api.enums.TypeOfCommunication;
 import info.plux.api.interfaces.Constants;
@@ -91,8 +86,8 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
     public final static String FRAME = "info.plux.android.sample.DeviceActivity.FRAME";
     public final static String ELAPSED_TIME_EVENT = "info.plux.android.sample.DeviceActivity.ELAPSED_TIME_EVENT";
 
-    private int samplingRate = 1000;
-    private float vcc = 3f; //change to the appropriate one according to device
+    private final int samplingRate = 1000;
+    private final float vcc = 3f; //change to the appropriate one according to device
 
     //Sources
     private boolean settingParameter = false;//fNIRS sensor
@@ -100,9 +95,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
     private BluetoothDevice bluetoothDevice;
     private boolean isBioplux = false;
-
-    private BITalinoCommunication bitalino;
-    private boolean isBITalino2 = false;
 
     private BiopluxCommunication bioplux;
 
@@ -125,27 +117,12 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
     private Button startButton;
     private Button stopButton;
 
-    private LinearLayout bitalinoLinearLayout;
-    private Button stateButton;
-    private RadioButton digital1RadioButton;
-    private RadioButton digital2RadioButton;
-    private RadioButton digital3RadioButton;
-    private RadioButton digital4RadioButton;
-    private Button triggerButton;
-    private SeekBar batteryThresholdSeekBar;
-    private Button batteryThresholdButton;
-    private SeekBar pwmSeekBar;
-    private Button pwmButton;
-    private TextView resultsTextView;
-
     private LinearLayout biopluxLinearLayout;
     private Button versionButton;
     private Button descriptionButton;
     private Button batteryButton;
     private TextView biopluxResultsTextView;
 
-    private boolean isDigital1RadioButtonChecked = false;
-    private boolean isDigital2RadioButtonChecked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -182,9 +159,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
                     if (frame instanceof BiopluxFrame) { //biosignalsplux
                         biopluxResultsTextView.setText(frame.toString());
-
-                    } else if (frame instanceof BITalinoFrame) { //BITalino
-                        resultsTextView.setText(frame.toString());
                     }
 
                 } else if (bundle.containsKey(ELAPSED_TIME_EVENT)) {
@@ -219,7 +193,14 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
     protected void onResume() {
         super.onResume();
 
-        registerReceiver(updateReceiver, makeUpdateIntentFilter());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.registerReceiver(
+                    updateReceiver, makeUpdateIntentFilter(), Context.RECEIVER_EXPORTED
+            );
+        } else {
+            this.registerReceiver(updateReceiver, makeUpdateIntentFilter());
+
+        }
         isUpdateReceiverRegistered = true;
     }
 
@@ -233,10 +214,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
         if (bioplux != null) {
             bioplux.unregisterReceivers();
-        }
-
-        if (bitalino != null) {
-            bitalino.unregisterReceivers();
         }
     }
 
@@ -253,20 +230,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         disconnectButton = findViewById(R.id.disconnect_button);
         startButton = findViewById(R.id.start_button);
         stopButton = findViewById(R.id.stop_button);
-
-        //BITalino UI elements
-        bitalinoLinearLayout = findViewById(R.id.bitalino_linear_layout);
-        stateButton = findViewById(R.id.state_button);
-        digital1RadioButton = findViewById(R.id.digital_1_radio_button);
-        digital2RadioButton = findViewById(R.id.digital_2_radio_button);
-        digital3RadioButton = findViewById(R.id.digital_3_radio_button);
-        digital4RadioButton = findViewById(R.id.digital_4_radio_button);
-        triggerButton = findViewById(R.id.trigger_button);
-        batteryThresholdSeekBar = findViewById(R.id.battery_threshold_seek_bar);
-        batteryThresholdButton = findViewById(R.id.battery_threshold_button);
-        pwmSeekBar = findViewById(R.id.pwm_seek_bar);
-        pwmButton = findViewById(R.id.pwm_button);
-        resultsTextView = findViewById(R.id.results_text_view);
 
         //biosignalsplux UI elements
         biopluxLinearLayout = findViewById(R.id.bioplux_linear_layout);
@@ -294,22 +257,11 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
         if (isBioplux) {
             try {
-                bioplux = BiopluxCommunicationFactory.getCommunication(bluetoothDevice,
-                        this, this, this);
+                bioplux = (BiopluxCommunication) DeviceCommunicationFactory.getDeviceCommunication(bluetoothDevice, communication, this, this, this);
                 bioplux.setConnectionControllerEnabled(false);
                 bioplux.setDataStreamControllerEnabled(false);
                 //uncomment to receive the data as an array instead of a object [only available for BTH]
                 //bioplux.setBiopluxFrameEnabled(false);
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-
-        } else {
-            try {
-                bitalino = BITalinoCommunicationFactory.getCommunication(communication,
-                        this, this);
-                bitalino.setConnectionControllerEnabled(false);
-                bitalino.setDataStreamControllerEnabled(true);
             } catch (PLUXException e) {
                 e.printStackTrace();
             }
@@ -320,20 +272,11 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         disconnectButton.setOnClickListener(this);
         startButton.setOnClickListener(this);
         stopButton.setOnClickListener(this);
-        stateButton.setOnClickListener(this);
-        digital1RadioButton.setOnClickListener(this);
-        digital2RadioButton.setOnClickListener(this);
-        digital3RadioButton.setOnClickListener(this);
-        digital4RadioButton.setOnClickListener(this);
-        triggerButton.setOnClickListener(this);
-        batteryThresholdButton.setOnClickListener(this);
-        pwmButton.setOnClickListener(this);
 
         versionButton.setOnClickListener(this);
         descriptionButton.setOnClickListener(this);
         batteryButton.setOnClickListener(this);
 
-        bitalinoLinearLayout.setVisibility(isBioplux ? View.GONE : View.VISIBLE);
         biopluxLinearLayout.setVisibility(isBioplux ? View.VISIBLE : View.GONE);
     }
 
@@ -373,19 +316,17 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
                     } else if (parcelable instanceof EventData) { //biosignals
                         final EventData eventData = intent.getParcelableExtra(Constants.EXTRA_COMMAND_REPLY);
 
-                        if (eventData.getEventDescription().equals(Constants.BATTERY_EVENT)) {
+                        if (eventData.eventDescription.equals(Constants.BATTERY_EVENT)) {
 
                             final float R1 = 69.8f, R2 = 30.0f;
-                            final float batteryValue = (float) (((R1 + R2) / R2)
-                                    * ((eventData.getBatteryLevel() * vcc * 0.5) / ((Math.pow(2, 11)))));
+                            final float batteryValue = (float) (((R1 + R2) / R2) * ((eventData.batteryLevel * vcc * 0.5) / ((Math.pow(2, 11)))));
 
                             final float batteryLevel = convertBatteryVtoPercent(batteryValue);
 
                             biopluxResultsTextView.setText(String.valueOf(batteryLevel));
 
-                        } else if (eventData.getEventDescription().equals(DISCONNECT_EVENT)) {
-                            final DisconnectEventType disconnectEventType = (DisconnectEventType)
-                                    intent.getSerializableExtra(EXTRA_EVENT_DATA);
+                        } else if (eventData.eventDescription.equals(DISCONNECT_EVENT)) {
+                            final DisconnectEventType disconnectEventType = (DisconnectEventType) intent.getSerializableExtra(EXTRA_EVENT_DATA);
 
                             Log.d(TAG, "Disconnect event: " + disconnectEventType.name());
                         }
@@ -401,15 +342,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
                                 e.printStackTrace();
                             }
                         }
-                    } else if (parcelable instanceof BITalinoState) { //BITalino
-                        Log.d(TAG, ((BITalinoState) parcelable).toString());
-                        resultsTextView.setText(parcelable.toString());
-
-                    } else if (parcelable instanceof BITalinoDescription) { //BITalino
-                        isBITalino2 = ((BITalinoDescription) parcelable).isBITalino2();
-                        resultsTextView.setText(String.format("isBITalino2: %b; FwVersion: %.1f",
-                                isBITalino2, ((BITalinoDescription) parcelable).getFwVersion()));
-
                     }
                 }
             } else if (ACTION_EVENT_AVAILABLE.equals(action)) {
@@ -435,8 +367,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
                 } else if (event.equals(GESTURE_FEATURES_EVENT)) {
 
                 } else if (event.equals(DISCONNECT)) {
-                    final DisconnectEventType disconnectEventType
-                            = (DisconnectEventType) intent.getSerializableExtra(EXTRA_EVENT_DATA);
+                    final DisconnectEventType disconnectEventType = (DisconnectEventType) intent.getSerializableExtra(EXTRA_EVENT_DATA);
                     Log.d(TAG, disconnectEventType.name());
                 } else if (event.equals(ON_BODY_EVENT)) {
 
@@ -467,7 +398,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         if (frame instanceof BiopluxFrame) {
             final BiopluxFrame biopluxFrame = (BiopluxFrame) frame;
 
-            if (biopluxFrame.getSequence() % samplingRate == 0) {
+            if (biopluxFrame.sequence % samplingRate == 0) {
                 Log.d(TAG, biopluxFrame.toString());
 
                 Message message = handler.obtainMessage();
@@ -491,7 +422,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
     }
 
     @Override
-    public void onBiopluxError(CommandError error) {
+    public void onBiopluxError(CommandError error, String comment, String receivedBytes) {
         Log.e(TAG, "onBiopluxError: " + error.name());
     }
 
@@ -516,40 +447,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         } else if (viewId == R.id.stop_button) {
             stopAcquisition();
 
-        } else if (viewId == R.id.state_button) {
-            checkState();
-
-        } else if (viewId == R.id.trigger_button) {
-            triggerDevice();
-
-        } else if (viewId == R.id.digital_1_radio_button) {
-            digital1RadioButton.setChecked(!isDigital1RadioButtonChecked);
-            isDigital1RadioButtonChecked = digital1RadioButton.isChecked();
-
-        } else if (viewId == R.id.digital_2_radio_button) {
-            digital2RadioButton.setChecked(!isDigital2RadioButtonChecked);
-            isDigital2RadioButtonChecked = digital2RadioButton.isChecked();
-
-        } else if (viewId == R.id.digital_3_radio_button) {
-            digital3RadioButton.setChecked(!digital3RadioButton.isChecked());
-
-        } else if (viewId == R.id.digital_4_radio_button) {
-            digital4RadioButton.setChecked(!digital4RadioButton.isChecked());
-
-        } else if (viewId == R.id.battery_threshold_button) {
-            try {
-                bitalino.battery(batteryThresholdSeekBar.getProgress());
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-
-        } else if (viewId == R.id.pwm_button) {
-            try {
-                bitalino.pwm(pwmSeekBar.getProgress());
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-
         } else if (viewId == R.id.version_button) {
             try {
                 bioplux.getVersion();
@@ -573,36 +470,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         }
     }
 
-    private void triggerDevice() {
-        if (!isBioplux) {
-            int[] digitalChannels = new int[isBITalino2 ? 2 : 4];
-
-            digitalChannels[0] = (digital1RadioButton.isChecked()) ? 1 : 0;
-            digitalChannels[1] = (digital2RadioButton.isChecked()) ? 1 : 0;
-
-            if (!isBITalino2) {
-                digitalChannels[2] = (digital3RadioButton.isChecked()) ? 1 : 0;
-                digitalChannels[3] = (digital4RadioButton.isChecked()) ? 1 : 0;
-            }
-
-            try {
-                bitalino.trigger(digitalChannels);
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void checkState() {
-        if (!isBioplux) {
-            try {
-                bitalino.state();
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void stopAcquisition() {
         stopTimer();
 
@@ -610,12 +477,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
             sources.clear();
             try {
                 bioplux.stop();
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                bitalino.stop();
             } catch (PLUXException e) {
                 e.printStackTrace();
             }
@@ -628,12 +489,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         if (isBioplux) {
             startBioplux();
 
-        } else {
-            try {
-                bitalino.start(samplingRate, new int[]{0, 1, 2, 3, 4, 5});
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -641,12 +496,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         if (isBioplux) {
             try {
                 bioplux.connect(bluetoothDevice.getAddress());
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                bitalino.connect(bluetoothDevice.getAddress());
             } catch (PLUXException e) {
                 e.printStackTrace();
             }
@@ -659,12 +508,6 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
         if (isBioplux) {
             try {
                 bioplux.disconnect();
-            } catch (PLUXException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                bitalino.disconnect();
             } catch (PLUXException e) {
                 e.printStackTrace();
             }
@@ -699,6 +542,9 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
          * * port 1 - emg; port 2 - acc/mag (3 channels/3 channels).
          * * If intended use freqDivisor - size of the window used for the envelope calculation.
          *
+         * CARDIOBAN BLE
+         * * port 1 - ecg; port 11 - acc/gyr (3 channels/3 channels).
+         *
          * FNIRS
          * *port 9 - infrared/red (4 channels-R1,IR1,R2,IR2) ; port 11 - acc (3 channels).
          * *It is necessary to set LED's intensity. To do so use:
@@ -711,10 +557,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
         //add the necessary sources following the instructions above
         sources.add(new Source(1, 16, (byte) 0x01, 1));
-        sources.add(new Source(2, 16, (byte) 0x01, 1));
-        sources.add(new Source(3, 16, (byte) 0x01, 1));
-        sources.add(new Source(4, 16, (byte) 0x01, 1));
-        sources.add(new Source(9, 16, (byte) 0x03, 1));
+        sources.add(new Source(11, 16, (byte) 0x07, 1));
 
         //Comment this try-catch block for fNIRS and set the flag settingParameter to true
         try {
@@ -772,11 +615,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
     }
 
     private String getTimeString(long time) {
-        return String.format("%02d:%02d:%02d.%02d",
-                TimeUnit.MILLISECONDS.toHours(time),
-                TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)),
-                TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)),
-                TimeUnit.MILLISECONDS.toMillis(time) - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(time)));
+        return String.format("%02d:%02d:%02d.%02d", TimeUnit.MILLISECONDS.toHours(time), TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)), TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)), TimeUnit.MILLISECONDS.toMillis(time) - TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(time)));
     }
 
     /*

@@ -7,7 +7,7 @@
     android:gravity="center"
     android:orientation="vertical">
 
-    <android.support.v7.widget.AppCompatImageView
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:scaleType="centerInside"
