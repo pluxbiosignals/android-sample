@@ -377,7 +377,7 @@ public class DeviceActivity extends AppCompatActivity implements OnDataAvailable
 
                             final float R1 = 69.8f, R2 = 30.0f;
                             final float batteryValue = (float) (((R1 + R2) / R2)
-                                    * ((eventData.getBatteryLevel() * vcc * 0.5) / ((Math.pow(2, 11)))));
+                                    * ((eventData.getBatteryLevel() * vcc ) / ((Math.pow(2, 11)))));
 
                             final float batteryLevel = convertBatteryVtoPercent(batteryValue);
 
